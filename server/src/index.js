@@ -1,10 +1,12 @@
-import express from 'express';
-import axios from 'axios'
+import app from "./app.js";
+import {mongoDB} from "./db.js";
 
-const app = express();
+// Call the method to connect with mongoDB
+mongoDB();
 
+// Call some methods to show the port
 app.get('/', (req, res)=>{
-    res.send("Hello World");   
+    res.send("Backend of the application");   
 });
 
 app.listen(4000, ()=>{
