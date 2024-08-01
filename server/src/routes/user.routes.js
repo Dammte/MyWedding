@@ -14,10 +14,10 @@ const router = Router();
  *  /verify is for verify if the token is valid and exists for every user.
  *  /profile, first verify if the token exists for the user and then continue showing the profile of the user.
  */
-router.post('/register', validateSchema(registerSchema),  register);
-router.post('/login', validateSchema(loginSchema), login);
-router.post('/logout', logout); 
-router.get('/verify', verifyToken);
-router.get('/profile', authenticationRequired, profile);
+router.post("/register", validateSchema(registerSchema),  register);
+router.post("/login", validateSchema(loginSchema), login);
+router.post("/logout", logout); 
+router.get("/verify", verifyToken);
+router.get("/profile", authenticationRequired, profile);
 
 export default router;

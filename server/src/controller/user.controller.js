@@ -13,20 +13,14 @@ import { TOKEN_SECRET } from "../config.js";
  */
 export const register = async (req, res) =>{
     // Save the parameters of the request-body into the variables
-    const { name, lastname, email, password } = req.body;
+    const { name, lastname, email, password, rol = "user" } = req.body;
     try {
         // Found an user with the same email or not.
         const userFound = await User.findOne({email});
-        if(userFound) return res.status(400).json({message: "Email is already in use."});
+        if(userFound) return res.status(400).json(["Email is already in use."]);
 
         // Generate a hash for the password's user with length 10.
         const passwordHash = await bcrypt.hash(password, 10);
-
-        // Generate a token for the user with the id of the new user
-        const token = await createAccessToken({id: userFound._id});
-
-        // Set the cookie with the new token created for the user 
-        res.cookie('token', token);
 
         // Create a new user with the Schema of User
         const newUser = new User({
@@ -34,16 +28,25 @@ export const register = async (req, res) =>{
             lastname,
             email,
             password: passwordHash,
+            rol,
         });
 
         // Save the newUser into database with mongoose.
-        const savedUser = newUser.save();
+        const savedUser = await newUser.save();
+
+        // Generate a token for the user with the id of the new user
+        const token = await createAccessToken({id: savedUser._id});
+
+        // Set the cookie with the new token created for the user 
+        res.cookie('token', token);
+
 
         res.json({
             id: savedUser._id,
             name: savedUser.name,
             lastname: savedUser.lastname,
             email: savedUser.email,
+            rol: savedUser.rol,
             createdAt: savedUser.createdAt,
             updatedAt: savedUser.updatedAt,
         });
@@ -64,11 +67,11 @@ export const login = async (req, res) => {
     try {
         // Research for the user with the email and return a code if the user doesn't exist.
         const userFound = await User.findOne({email});
-        if(!userFound) return res.status(500).json({message: "User not found"});
+        if(!userFound) return res.status(500).json(["User not found"]);
 
         // Validate the password with bcryptjs, the hash and the password wrote.
         const isMatch = await bcrypt.compare(password, userFound.password);
-        if(!isMatch) return res.status(400).json({message: "Incorrect email or password"});
+        if(!isMatch) return res.status(400).json(["Incorrect email or password"]);
 
         // Generate a token for the user with the id of the new user 
         const token = await createAccessToken({id: userFound._id});
@@ -81,6 +84,7 @@ export const login = async (req, res) => {
             name: userFound.name,
             lastname: userFound.lastname,
             email: userFound.email,
+            rol: userFound.rol,
             createdAt: userFound.createdAt,
             updatedAt: userFound.updatedAt,
         });
@@ -115,7 +119,7 @@ export const logout = async (req, res) => {
  */
 export const profile = async (req, res) => {
     const userFound = await User.findById(req.user.id);
-    if (!userFound) return res.status(400).json({message: "User not found"});
+    if (!userFound) return res.status(400).json(["User not found"]);
     return res.json({
         id: userFound._id,
         name: userFound.name,
